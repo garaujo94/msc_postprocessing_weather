@@ -36,12 +36,20 @@ file with the shape
 ```
 ## get_all_forecasts.py
 ```
-Soon...
-```
+usage: get_all_forecasts.py [-h] [-t] [-o]
 
-## get_all_observation.py
+optional arguments:
+  -h, --help  show this help message and exit
+  -t          get 2.5km grid data
+  -o          get 1km grid data
+
+HINT: python get_all_forecasts.py -t -o
 ```
-Soon...
+The Hint above will get forecasts of MEPS and GRIDPP for the crawled data.
+
+## get_all_observations.py
+```
+python get_all_observations.py
 ```
 
 ## ETL
