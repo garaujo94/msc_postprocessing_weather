@@ -1,6 +1,7 @@
 venv/
 .idea
 
-data/crawler_data/*
-data/stations/*
+data/crawler_data/*.json
+data/stations/*.csv
+data/forecasts/*.csv
 data/credentials.json
