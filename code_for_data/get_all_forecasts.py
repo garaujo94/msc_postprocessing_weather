@@ -4,6 +4,11 @@ import json
 import pandas as pd
 from tqdm import tqdm
 import argparse
+import os
+
+
+if not os.path.exists('forecasts'):
+    os.mkdir('forecasts')
 
 
 parser = argparse.ArgumentParser()

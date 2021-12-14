@@ -5,6 +5,11 @@ import numpy as np
 from tqdm import tqdm
 import re
 import argparse
+import os
+
+
+if not os.path.exists('crawler_data'):
+    os.mkdir('crawler_data')
 
 
 class NpEncoder(json.JSONEncoder):

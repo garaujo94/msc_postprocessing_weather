@@ -2,9 +2,12 @@ import requests
 import pandas as pd
 import json
 from tqdm import tqdm
+import os
 
 
 print('Starting...')
+if not os.path.exists('stations'):
+    os.mkdir('stations')
 
 print('Getting API Credentials...')
 f = open('credentials.json', )

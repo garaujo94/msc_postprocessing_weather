@@ -6,6 +6,12 @@ from tqdm import tqdm
 import datetime
 import time
 import argparse
+import os
+
+
+if not os.path.exists('observation'):
+    os.mkdir('observation')
+    os.mkdir('observation/logs')
 
 
 class NpEncoder(json.JSONEncoder):

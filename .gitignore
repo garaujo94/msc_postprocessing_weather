@@ -1,11 +1,11 @@
 venv/
 .idea
 
-data/crawler_data/*.json
-data/stations/*.csv
-data/forecasts/*.csv
-data/observation/*.json
-data/observation/logs/*.txt
+code_for_data/crawler_data/*.json
+code_for_data/stations/*.csv
+code_for_data/forecasts/*.csv
+code_for_data/observation/*.json
+code_for_data/observation/logs/*.txt
 
 
-data/credentials.json
+code_for_data/credentials.json
