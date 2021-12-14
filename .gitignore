@@ -1,4 +1,6 @@
 venv/
 .idea
 
-data/crawler_data/
+data/crawler_data/*
+data/stations/*
+data/credentials.json

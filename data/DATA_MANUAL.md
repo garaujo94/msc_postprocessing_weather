@@ -24,9 +24,16 @@ Directory: /crawler_data/
 
 ## get_stations.py
 ```
-Soon...
+python get_stations.py
 ```
-
+It is needed to register on Frost API and create a file called "credentials.json" at the same folder of the python 
+file with the shape
+```
+{
+    "client_ID": "00000",
+    "secret": "00000"
+}
+```
 ## get_all_forecasts.py
 ```
 Soon...
