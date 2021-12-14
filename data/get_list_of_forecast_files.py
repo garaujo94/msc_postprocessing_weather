@@ -18,15 +18,17 @@ class NpEncoder(json.JSONEncoder):
         return super(NpEncoder, self).default(obj)
 
 
-def scrap_url(url, year, month):
+def scrap_url(url, years, months):
     complete_urls = []
     dates = []
-    for ano in tqdm(year, desc='Ano'):
-        for mes in tqdm(month, desc='Mês', leave=False):
-            if len(str(mes)) == 1:
-                mes = str(0) + str(mes)
-            url_por_ano_mes = f"{url}/{ano}/{mes}/catalog.html"
-            response = requests.get(url_por_ano_mes)
+    session = requests.Session()
+    for year in tqdm(years, desc='Year'):
+        for month in tqdm(months, desc='Month', leave=False):
+            if len(str(month)) == 1:
+                month = str(0) + str(month)
+            url_by_year_month = f"{url}/{year}/{month}/catalog.html"
+
+            response = session.get(url_by_year_month)
             soup = BeautifulSoup(response.text, 'html.parser')
 
             topics = soup.findAll('tt')
@@ -35,47 +37,48 @@ def scrap_url(url, year, month):
                 if len(i.get_text().strip()) == 3:
                     days.append(i.get_text().strip())
             for day in days:
-                url_completa = f"{url}/{ano}/{mes}/{day}catalog.html"
-                complete_urls.append(url_completa)
+                full_url = f"{url}/{year}/{month}/{day}catalog.html"
+                complete_urls.append(full_url)
 
-                dicionario = {
-                    'ano': ano,
-                    'mes': mes,
-                    'dia': day,
-                    'url': f"{url}/{ano}/{mes}/{day}catalog.html"
+                answer = {
+                    'year': year,
+                    'month': month,
+                    'day': day,
+                    'url': f"{url}/{year}/{month}/{day}catalog.html"
                 }
-                dates.append(dicionario)
+                dates.append(answer)
     return dates
 
 
-def scrap_data(url_data, datas, match):
+def scrap_data(url_data, dates, match):
     full_data = []
-    for row in tqdm(datas, desc='Pages/day'):
-        # Extraindo URL do dicinário
+    session = requests.Session()
+    for row in tqdm(dates, desc='Pages/day'):
+        # Extracting URL from dictionary
         url = row['url']
 
-        # Pegando página
-        response = requests.get(url)
+        # Getting page
+        response = session.get(url)
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        # Pegando tag de interesse
+        # Getting tag of interest
         topics = soup.findAll('tt')
 
-        # Iterando respostas
+        # Iterate over results
         for topic in topics:
-            conteudo = topic.get_text().strip()
-            m = re.search(match, conteudo)
+            content = topic.get_text().strip()
+            m = re.search(match, content)
             if m:
-                dicionario = {
-                    'ano': row['ano'],
-                    'mes': row['mes'],
-                    'dia': row['dia'],
-                    'hora': conteudo[-6:-3],
-                    'url_pagina_inicial': row['url'],
-                    'arquivo': conteudo,
-                    'uri': f'{url_data}/{row["ano"]}/{row["mes"]}/{row["dia"]}{conteudo}'
+                answer = {
+                    'year': row['year'],
+                    'month': row['month'],
+                    'day': row['day'],
+                    'hour': content[-6:-3],
+                    'url_page': row['url'],
+                    'file': content,
+                    'uri': f'{url_data}/{row["year"]}/{row["month"]}/{row["day"]}{content}'
                 }
-                full_data.append(dicionario)
+                full_data.append(answer)
     return full_data
 
 
@@ -88,11 +91,11 @@ def main():
     args = parser.parse_args()
     # Year to scrap
 
-    anos = np.arange(args.year_init, args.year_final + 1).tolist()
-    print(f'Year to look: {anos}')
+    years = np.arange(int(args.year_init), int(args.year_final) + 1).tolist()
+    print(f'Year to look: {years}')
 
     # All months
-    meses = np.arange(1, 13)
+    months = np.arange(1, 13)
 
     if args.t:
         print('=== MEPS 2.5km ===')
@@ -100,7 +103,7 @@ def main():
         url_to_search = 'https://thredds.met.no/thredds/catalog/meps25epsarchive'
         url_data = 'https://thredds.met.no/thredds/dodsC/meps25epsarchive'
 
-        datas = scrap_url(url_to_search, anos, meses)
+        datas = scrap_url(url_to_search, years, months)
 
         print('Scrapping URLs...OK')
         print('------')
@@ -113,7 +116,7 @@ def main():
 
         # Your codes ....
         print('Start to save...')
-        json.dump(full_data, open('crawler_data_2_5_km.json', 'w'), cls=NpEncoder)
+        json.dump(full_data, open('crawler_data/crawler_data_2_5_km.json', 'w'), cls=NpEncoder)
         print('Saved as crawler_data_2_5_km.json')
     if args.o:
         print('=== GRIDPP 1km ===')
@@ -121,7 +124,7 @@ def main():
 
         url_to_search = 'https://thredds.met.no/thredds/catalog/metpparchive'
         url_data = 'https://thredds.met.no/thredds/dodsC/metpparchive'
-        datas = scrap_url(url_to_search, anos, meses)
+        datas = scrap_url(url_to_search, years, months)
 
         print('Scrapping URLs...OK')
         print('------')
@@ -134,7 +137,7 @@ def main():
 
         # Your codes ....
         print('Start to save...')
-        json.dump(full_data, open('crawler_data_1_km.json', 'w'), cls=NpEncoder)
+        json.dump(full_data, open('crawler_data/crawler_data_1_km.json', 'w'), cls=NpEncoder)
         print('Saved as crawler_data_1_km.json')
 
 
