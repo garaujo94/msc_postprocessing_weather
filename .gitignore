@@ -4,4 +4,8 @@ venv/
 data/crawler_data/*.json
 data/stations/*.csv
 data/forecasts/*.csv
+data/observation/*.json
+data/observation/logs/*.txt
+
+
 data/credentials.json
