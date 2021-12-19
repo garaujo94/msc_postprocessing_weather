@@ -5,9 +5,13 @@ import json
 from tqdm import tqdm
 import datetime
 import time
-import argparse
+import logging
 import os
 
+
+logging.basicConfig(filename=f'observation/logs/log_{datetime.datetime.now()}.log',
+                    level=logging.DEBUG,
+                    format='%(asctime)s | %(name)s | %(levelname)s | %(message)s')
 
 if not os.path.exists('observation'):
     os.mkdir('observation')
@@ -67,7 +71,6 @@ for station in station_id:
         querys.append(query_of_id)
         query_of_id = ''
 
-log = open(f'observation/logs/log_{datetime.datetime.now()}.txt', 'w')
 error_list = []
 k = 0
 part = 0
@@ -93,7 +96,7 @@ for row in tqdm(forecast_files):
 
             aux[i] = data['data']
         except:
-            log.write(f'Error {timestamp_query} at {query}\n')
+            logging.warning(f'Error {timestamp_query} at {query}')
         i += 1
         time.sleep(1)
 
