@@ -9,3 +9,5 @@ code_for_data/observation/logs/*.txt
 
 
 code_for_data/credentials.json
+
+*.pkl
