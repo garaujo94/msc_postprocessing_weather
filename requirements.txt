@@ -14,3 +14,4 @@ gridpp==0.5.3
 utm==0.7.0
 
 scikit-learn==1.0.1
+tensorboard==2.7.0

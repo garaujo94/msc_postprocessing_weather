@@ -7,6 +7,25 @@ from sklearn.preprocessing import StandardScaler
 import pickle
 
 
+class Stations:
+    def __init__(self):
+        pass
+
+
+class OriginalData:
+    def __init__(self):
+        pass
+
+
+def to_utm(x):
+    """
+    Transform lat/long coordinates in UTM
+    :param x: [lat, long]
+    :return: utm
+    """
+    return utm.from_latlon(x[0], x[1])
+
+
 class WeatherDataset:
     def __init__(self, name):
         self.graph = None
@@ -32,16 +51,8 @@ class WeatherDataset:
 
         self.graph = self.__create_graph()
 
-    def to_utm(self, x):
-        """
-        Transform lat/long coordinates in UTM
-        :param x: [lat, long]
-        :return: utm
-        """
-        return utm.from_latlon(x[0], x[1])
-
     def __calculate_utm(self):
-        self.stations['utm'] = self.stations[['lat', 'long']].apply(lambda x: self.to_utm(x), axis=1)
+        self.stations['utm'] = self.stations[['lat', 'long']].apply(lambda x: to_utm(x), axis=1)
         self.stations['utm_x'] = self.stations['utm'].apply(lambda x: x[0])
         self.stations['utm_y'] = self.stations['utm'].apply(lambda x: x[1])
 
@@ -165,6 +176,19 @@ class WeatherDataset:
         graph = self.create_graph_structure(self.edges)
         graph.ndata['x'] = torch.from_numpy(features)
         graph.ndata['y'] = torch.from_numpy(labels)
+
+        n_nodes = graph.ndata['x'].shape[0]
+        n_train = int(n_nodes * 0.8)
+        n_val = int(n_nodes * 0.1)
+        train_mask = torch.zeros(n_nodes, dtype=torch.bool)
+        val_mask = torch.zeros(n_nodes, dtype=torch.bool)
+        test_mask = torch.zeros(n_nodes, dtype=torch.bool)
+        train_mask[:n_train] = True
+        val_mask[n_train:n_train + n_val] = True
+        test_mask[n_train + n_val:] = True
+        graph.ndata['train_mask'] = train_mask
+        graph.ndata['val_mask'] = val_mask
+        graph.ndata['test_mask'] = test_mask
 
         return graph
 
