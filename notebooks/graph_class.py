@@ -26,10 +26,46 @@ def to_utm(x):
     return utm.from_latlon(x[0], x[1])
 
 
+def create_graph_structure(edges_data):
+    src = edges_data['src'].to_numpy()
+    dst = edges_data['dst'].to_numpy()
+
+    g = dgl.graph((src, dst))
+    return g
+
+
+def calculate_stations_distances(x, y):
+    """
+    Get arrays of coordinates and calculate the distance between each other
+    :param x: np.array
+    :param y: np.array
+    :return:
+    """
+    distances = np.ndarray(shape=(x.shape[0] - 1, x.shape[0]))
+
+    for i in range(x.shape[0] - 1):
+        next_x = np.concatenate((x[i + 1:], x[:i + 1]), axis=None)
+        next_y = np.concatenate((y[i + 1:], y[:i + 1]), axis=None)
+
+        diff_x = x - next_x
+        diff_y = y - next_y
+
+        diff_x_square = diff_x ** 2
+        diff_y_square = diff_y ** 2
+
+        sum_square = diff_x_square + diff_y_square
+
+        distances[i] = np.sqrt(sum_square)
+
+    distances = distances.transpose()
+
+    return distances
+
+
 class WeatherDataset:
-    def __init__(self, name):
+    def __init__(self, name, max_distance=35):
         self.graph = None
-        self.features_columns = ['lat', 'long', 'year', 'month', 'day', 'hour', 'forecast', 'gridpp']
+        self.features_columns = ['lat', 'long', 'month', 'day', 'hour', 'forecast', 'gridpp']
         self.label_column = ['observation']
         self.stations_dict = None
         self.edges = None
@@ -38,6 +74,7 @@ class WeatherDataset:
         self.n_nearest = None
         self.dataframe = None
         self.name = name
+        self.max_distance = max_distance
 
     def create(self, path=None, n_nearest: int = 5):
         self.dataframe = pd.read_csv(path)
@@ -45,7 +82,7 @@ class WeatherDataset:
         self.stations = self.dataframe.copy()
         self.stations.drop_duplicates(subset=['station_id'], inplace=True)
         self.__calculate_utm()
-        self.distances = self.calculate_stations_distances(np.array(self.stations.utm_x), np.array(self.stations.utm_y))
+        self.distances = calculate_stations_distances(np.array(self.stations.utm_x), np.array(self.stations.utm_y))
         self.edges = self.__calculate_graph_structure_dataframe()
         self.stations_dict = self.__create_stations_dict()
 
@@ -55,33 +92,6 @@ class WeatherDataset:
         self.stations['utm'] = self.stations[['lat', 'long']].apply(lambda x: to_utm(x), axis=1)
         self.stations['utm_x'] = self.stations['utm'].apply(lambda x: x[0])
         self.stations['utm_y'] = self.stations['utm'].apply(lambda x: x[1])
-
-    def calculate_stations_distances(self, x, y):
-        """
-        Get arrays of coordinates and calculate the distance between each other
-        :param x: np.array
-        :param y: np.array
-        :return:
-        """
-        distances = np.ndarray(shape=(x.shape[0] - 1, x.shape[0]))
-
-        for i in range(x.shape[0] - 1):
-            next_x = np.concatenate((x[i + 1:], x[:i + 1]), axis=None)
-            next_y = np.concatenate((y[i + 1:], y[:i + 1]), axis=None)
-
-            diff_x = x - next_x
-            diff_y = y - next_y
-
-            diff_x_square = diff_x ** 2
-            diff_y_square = diff_y ** 2
-
-            sum_square = diff_x_square + diff_y_square
-
-            distances[i] = np.sqrt(sum_square)
-
-        distances = distances.transpose()
-
-        return distances
 
     def __calculate_graph_structure_dataframe(self):
         """
@@ -110,7 +120,9 @@ class WeatherDataset:
             'weight': weight
         }
 
-        return pd.DataFrame(to_df)
+        to_df = pd.DataFrame(to_df)
+
+        return to_df[to_df.weight < self.max_distance]
 
     def __create_stations_dict(self):
         stations_dict = self.stations[['station_id']].reset_index(drop=True).to_dict()['station_id']
@@ -119,26 +131,20 @@ class WeatherDataset:
 
         return new_dict
 
-    def create_graph_structure(self, edges_data):
-        src = edges_data['src'].to_numpy()
-        dst = edges_data['dst'].to_numpy()
-
-        g = dgl.graph((src, dst))
-        return g
-
     def __scale_data(self, features, labels):
         self.scaler_x = StandardScaler()
         self.scaler_y = StandardScaler()
 
         self.scaler_x.fit(features.reshape(-1, features.shape[-1]))
-        self.scaler_y.fit(labels)
+        self.scaler_y.fit(labels.reshape(-1, labels.shape[-1]))
 
         return self.scaler_x.transform(features.reshape(-1, features.shape[-1])).reshape(
-            features.shape), self.scaler_y.transform(labels)
+            features.shape), self.scaler_y.transform(labels.reshape(-1, labels.shape[-1])).reshape(
+            labels.shape)
 
     def __calculate_features_and_labels(self):
         shape = np.array(self.stations.utm_x).shape[0]
-        max_rows = 1400  # Change that
+        max_rows = self.dataframe.groupby(['node']).count()['station_id'].max()
 
         features = np.ndarray(shape=(shape, max_rows, len(self.features_columns)))
         labels = np.ndarray(shape=(shape, max_rows))
@@ -173,7 +179,7 @@ class WeatherDataset:
     def __create_graph(self):
         features, labels = self.__calculate_features_and_labels()
         features, labels = self.__scale_data(features, labels)
-        graph = self.create_graph_structure(self.edges)
+        graph = create_graph_structure(self.edges)
         graph.ndata['x'] = torch.from_numpy(features)
         graph.ndata['y'] = torch.from_numpy(labels)
 
