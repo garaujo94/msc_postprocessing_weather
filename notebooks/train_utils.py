@@ -7,11 +7,14 @@ if torch.cuda.is_available():
 else:
     devide = torch.device('cpu')
 
+
 def detach_tensor(tensor):
     return tensor.cpu().detach().numpy()
 
+
 def to_tensor(array):
     return torch.Tensor(array).to(device)
+
 
 def full_report(model, scaler_y, X_train, X_val, X_test, y_train, y_val, y_test):
     y_train_pred = model(X_train)
