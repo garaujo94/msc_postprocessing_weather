@@ -9,7 +9,7 @@ import logging
 import os
 
 
-logging.basicConfig(filename=f'observation/logs/log_{datetime.datetime.now()}.log',
+logging.basicConfig(filename=f'logs/get_all_observations_{datetime.datetime.now()}.log',
                     level=logging.DEBUG,
                     format='%(asctime)s | %(name)s | %(levelname)s | %(message)s')
 
@@ -30,6 +30,7 @@ class NpEncoder(json.JSONEncoder):
 
 
 print('Starting...')
+logging.info('Starting...')
 
 print('Getting API Credentials...')
 f = open('credentials.json', )
@@ -117,3 +118,4 @@ for row in tqdm(forecast_files):
 print('Start to save...')
 json.dump(final_response, open(f'observation/observation_{part}.json', 'w'), cls=NpEncoder)
 print('Saved as observation.json')
+logging.info('Done!')
