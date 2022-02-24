@@ -8,14 +8,12 @@ import time
 import logging
 import os
 
+if not os.path.exists('logs'):
+    os.mkdir('logs')
 
 logging.basicConfig(filename=f'logs/get_all_observations_{datetime.datetime.now()}.log',
                     level=logging.DEBUG,
                     format='%(asctime)s | %(name)s | %(levelname)s | %(message)s')
-
-if not os.path.exists('observation'):
-    os.mkdir('observation')
-    os.mkdir('observation/logs')
 
 
 class NpEncoder(json.JSONEncoder):
