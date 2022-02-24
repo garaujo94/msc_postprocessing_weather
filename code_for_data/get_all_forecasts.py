@@ -8,6 +8,9 @@ import os
 import logging
 from datetime import datetime
 
+if not os.path.exists('logs'):
+    os.mkdir('logs')
+
 # Log config
 logging.basicConfig(filename=f'logs/get_all_forecasts_{datetime.now()}.log',
                     level=logging.INFO,
