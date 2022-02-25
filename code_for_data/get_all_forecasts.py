@@ -81,6 +81,7 @@ if args.t:
         if i % 200 == 0:
             final_response.to_csv(f'forecasts/forecasts_2_5_km_{part}.csv', index=False)
             print(f'Saved forecasts_2_5_km_{part}.csv...')
+            del final_response
             final_response = pd.DataFrame(columns={'station_id',
                                                    'lat',
                                                    'long',
@@ -93,6 +94,7 @@ if args.t:
         i += 1
 
     final_response.to_csv(f'forecasts/forecasts_2_5_km_{part}.csv', index=False)
+    del final_response
 
 if args.o:
     print('=== 1km data ===')
@@ -102,7 +104,7 @@ if args.o:
         columns={'station_id', 'lat', 'long', 'indexes', 'forecast', 'nearest_gridpp_lat', 'nearest_gridpp_long'})
     # Forecast files
     try:
-        with open('crawler_data_1_km.json', 'r') as d:
+        with open('crawler_data/crawler_data_1_km.json', 'r') as d:
             forecast_files = json.load(d)
     except:
         logging.error('Error on reading json file')
