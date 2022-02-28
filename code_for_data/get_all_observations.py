@@ -40,13 +40,13 @@ print('----')
 with open('crawler_data/crawler_data_2_5_km.json', 'r') as d:
     forecast_files = json.load(d)
 
-year = 2019
-temp = []
-for f in forecast_files:
-    if f['year'] == year:
-        temp.append(f)
-
-forecast_files = temp
+# year = 2019
+# temp = []
+# for f in forecast_files:
+#     if f['year'] == year:
+#         temp.append(f)
+# print(temp)
+# forecast_files = temp
 
 # Stations data -> get station ID
 stations = pd.read_csv('stations/stations_id_locs.csv')
@@ -73,7 +73,7 @@ for station in station_id:
 error_list = []
 k = 0
 part = 0
-print(f'YEAR: {year}')
+# print(f'YEAR: {year}')
 for row in tqdm(forecast_files):
     k += 1
     timestamp_query = f'{row["year"]}-{row["month"]}-{row["day"][:-1]}T{row["hour"][:-1]}:00:00'
