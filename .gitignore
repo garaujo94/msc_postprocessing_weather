@@ -1,6 +1,7 @@
 venv/
 .idea
 
+*.pyc
 
 code_for_data/credentials.json
 
@@ -10,3 +11,7 @@ code_for_data/credentials.json
 /notebooks/runs/test_2/events.out.tfevents.1640787044.pop-os.13318.1
 /notebooks/runs/test_3/events.out.tfevents.1641292775.pop-os.7289.0
 /notebooks/runs/test_3/events.out.tfevents.1641293012.pop-os.7839.0
+/notebooks/graphs/test/*
+
+events.*
+*.log

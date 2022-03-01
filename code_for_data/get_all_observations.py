@@ -2,7 +2,7 @@ import requests
 import pandas as pd
 import numpy as np
 import json
-from tqdm import tqdm
+from tqdm import tqdm, tqdm_gui
 import datetime
 import time
 import logging
@@ -12,7 +12,7 @@ if not os.path.exists('logs'):
     os.mkdir('logs')
 
 logging.basicConfig(filename=f'logs/get_all_observations_{datetime.datetime.now()}.log',
-                    level=logging.DEBUG,
+                    level=logging.INFO,
                     format='%(asctime)s | %(name)s | %(levelname)s | %(message)s')
 
 
@@ -40,6 +40,9 @@ print('----')
 with open('crawler_data/crawler_data_2_5_km.json', 'r') as d:
     forecast_files = json.load(d)
 
+forecast_files = pd.DataFrame(forecast_files)
+year_range = np.arange(forecast_files.year.min(), forecast_files.year.max() + 1)
+
 # year = 2019
 # temp = []
 # for f in forecast_files:
@@ -60,26 +63,16 @@ final_response = []
 endpoint = 'https://frost.met.no/observations/v0.jsonld'
 
 station_id = stations.station_id  # Colocar aqui
+station_id = iter(station_id)
+stations = []
+for x, y, z in zip(station_id, station_id, station_id):
+    stations.append([x, y, z])
 
-query_of_id = ''
-querys = []
-for station in station_id:
-    query_of_id += f'{station.split(":")[0]}, '
-    if len(query_of_id) > 1500:
-        query_of_id = query_of_id[:-2]
-        querys.append(query_of_id)
-        query_of_id = ''
-
-error_list = []
-k = 0
-part = 0
 # print(f'YEAR: {year}')
-for row in tqdm(forecast_files):
-    k += 1
-    timestamp_query = f'{row["year"]}-{row["month"]}-{row["day"][:-1]}T{row["hour"][:-1]}:00:00'
-    i = 0
-    aux = {}
-    for query in querys:
+for year in tqdm(year_range):
+    logging.info(f'Starting year {year}')
+    timestamp_query = f'{year}-01-01/{year+1}-01-01'
+    for query in tqdm(stations):
         try:
             parameters = {
                 'sources': query,
@@ -93,27 +86,19 @@ for row in tqdm(forecast_files):
             # Extract JSON data
             data = r.json()
 
-            aux[i] = data['data']
+            final_response.extend(data['data'])
         except:
-            logging.warning(f'Error {timestamp_query} at {query}')
-        i += 1
+            logging.error(f'Error {timestamp_query} at {query}')
         time.sleep(1)
 
-    id_lat_long = []
-    for a in aux:
-        id_lat_long += aux[a]
+    # id_lat_long = []
+    # for a in aux:
+    #     id_lat_long += aux[a]
 
-    final_response += id_lat_long
-    if k % 5 == 0:
-        json.dump(final_response, open(f'observation/observation_{part}.json', 'w'), cls=NpEncoder)
-        print(f'Saved observations_{part}.json...')
-        final_response = []
-        part += 1
+    # final_response += id_lat_long
+    
+    json.dump(final_response, open(f'observation/observation_{year}.json', 'w'), cls=NpEncoder)
+    print(f'Saved observations_{year}.json...')
+    final_response = []
 
-    i += 1
-
-# Your codes....
-print('Start to save...')
-json.dump(final_response, open(f'observation/observation_{part}.json', 'w'), cls=NpEncoder)
-print('Saved as observation.json')
 logging.info('Done!')
