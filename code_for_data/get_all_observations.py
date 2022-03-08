@@ -79,7 +79,8 @@ for year in tqdm(year_range):
                 'referencetime': timestamp_query,
                 'elements': 'air_temperature',
                 'levels': 2,
-                'qualities': 0  # Ainda não pesquisei assim
+                'qualities': 0,  
+                'fields': 'sourceId, referenceTime, value'
             }
 
             r = requests.get(endpoint, parameters, auth=(credentials['client_ID'], ''))
@@ -96,6 +97,9 @@ for year in tqdm(year_range):
     #     id_lat_long += aux[a]
 
     # final_response += id_lat_long
+
+    df = pd.DataFrame(final_response)
+    df.to_csv(f'observation/observation_{year}.csv', index=False)
     
     json.dump(final_response, open(f'observation/observation_{year}.json', 'w'), cls=NpEncoder)
     print(f'Saved observations_{year}.json...')

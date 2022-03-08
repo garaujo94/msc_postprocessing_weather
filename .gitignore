@@ -15,3 +15,5 @@ code_for_data/credentials.json
 
 events.*
 *.log
+
+code_for_data/observation/*
