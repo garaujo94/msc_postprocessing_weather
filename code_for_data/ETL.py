@@ -2,6 +2,7 @@ import pandas as pd
 import os
 import re
 from datetime import datetime
+from tqdm import tqdm
 
 # Support Functions
 def is_csv(x):
@@ -11,11 +12,15 @@ def is_csv(x):
 
 def read_all_files(path, files):
     df = pd.DataFrame()
-    for arquivo in files:
+    for arquivo in tqdm(files):
         df_aux = pd.read_csv(f'{path}/{arquivo}')
         df = df.append(df_aux)
 
     return df
+
+def filter_observation_list_by_year(observation_path, year):
+    observation_list = os.listdir(observation_path)
+    return list(filter(lambda x: re.findall(f'\_{year}\_', x), observation_list))
 
 def kelvin_to_celsius(k):
     return k - 273
@@ -81,14 +86,19 @@ def main():
         print("Done")
 
         print('Reading Observations...')
-        observation = pd.read_csv(f'{observation_path}/observation_{year}.csv')
+        # observation = pd.read_csv(f'{observation_path}/observation_{year}.csv')
+        observation_files = filter_observation_list_by_year(observation_path, year)
+        observation = read_all_files(observation_path, observation_files)
 
+        print('transforming observation values')
         observation['observations'] = observation['observations'].apply(lambda x: x.split(':'))
         re_to_extract_numbers = r'\-*\d+\.*\d*'
         observation['observations'] = observation['observations'].apply(lambda x: float(re.findall(re_to_extract_numbers, x[-1])[0]))
 
+        print('transforming datetime')
         observation['datetime'] = observation.referenceTime.apply(lambda x: str_to_datime(x))
 
+        print('transforming station id')
         observation['sourceId'] = observation['sourceId'].apply(lambda x: x.split(':')[0])
         print("Done")
 
@@ -97,6 +107,7 @@ def main():
         final_data = final_data.merge(observation, how='inner', left_on=['station_id', 'datetime'], right_on=['sourceId', 'datetime'])
         final_data = final_data[desired_columns]
         print('Done')
+        print(f'Final Shape: {final_data.shape}')
 
         final_data.to_csv(f'../data/final_data_{year}.csv', index=False)
 

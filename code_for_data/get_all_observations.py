@@ -41,15 +41,8 @@ with open('crawler_data/crawler_data_2_5_km.json', 'r') as d:
     forecast_files = json.load(d)
 
 forecast_files = pd.DataFrame(forecast_files)
-year_range = np.arange(forecast_files.year.min(), forecast_files.year.max() + 1)
+year_range = np.arange(2021, forecast_files.year.max() + 1)
 
-# year = 2019
-# temp = []
-# for f in forecast_files:
-#     if f['year'] == year:
-#         temp.append(f)
-# print(temp)
-# forecast_files = temp
 
 # Stations data -> get station ID
 stations = pd.read_csv('stations/stations_id_locs.csv')
@@ -63,17 +56,21 @@ final_response = []
 endpoint = 'https://frost.met.no/observations/v0.jsonld'
 
 station_id = stations.station_id  # Colocar aqui
-station_id = iter(station_id)
-stations = []
-for x, y, z in zip(station_id, station_id, station_id):
-    stations.append([x, y, z])
+# station_id = iter(station_id)
+# stations = []
+# for x, y, z in zip(station_id, station_id, station_id):
+#     stations.append([x, y, z])
+stations = station_id
 
-# print(f'YEAR: {year}')
+
 for year in tqdm(year_range):
+    part = 0
+    count = 0
     logging.info(f'Starting year {year}')
     timestamp_query = f'{year}-01-01/{year+1}-01-01'
     for query in tqdm(stations):
         try:
+            count += 1
             parameters = {
                 'sources': query,
                 'referencetime': timestamp_query,
@@ -92,17 +89,24 @@ for year in tqdm(year_range):
             logging.error(f'Error {timestamp_query} at {query}')
         time.sleep(1)
 
-    # id_lat_long = []
-    # for a in aux:
-    #     id_lat_long += aux[a]
+        if count == 200:
+            df = pd.DataFrame(final_response)
+            df.to_csv(f'observation/observation_{year}_{part}.csv', index=False)
+            del df
+            
+            # json.dump(final_response, open(f'observation/observation_{year}_{part}.json', 'w'), cls=NpEncoder)
+            # print(f'Saved observations_{year}.json...')
+            final_response = []
+            count = 0
+            part += 1
 
-    # final_response += id_lat_long
+
 
     df = pd.DataFrame(final_response)
-    df.to_csv(f'observation/observation_{year}.csv', index=False)
+    df.to_csv(f'observation/observation_{year}_{part}.csv', index=False)
     
-    json.dump(final_response, open(f'observation/observation_{year}.json', 'w'), cls=NpEncoder)
-    print(f'Saved observations_{year}.json...')
+    # json.dump(final_response, open(f'observation/observation_{year}_{part}.json', 'w'), cls=NpEncoder)
+    # print(f'Saved observations_{year}_{part}.json...')
     final_response = []
 
 logging.info('Done!')
