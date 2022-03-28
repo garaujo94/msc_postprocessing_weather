@@ -13,8 +13,8 @@ import matplotlib.pyplot as plt
 
 class DataForNN(Dataset):
     def __init__(self, df, labels, scaler_feat=None, scaler_label=None):
-        self.data = df.to_numpy()
-        self.labels = labels.to_numpy()
+        self.data = df
+        self.labels = labels
 
     def __getitem__(self, idx):
         sample = self.data[idx]
